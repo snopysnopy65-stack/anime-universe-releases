@@ -1,0 +1,23 @@
+# ينشر نسخة جديدة من اللعبة كلما رُفع ملف apk جديد
+name: نشر نسخة جديدة
+on:
+  push:
+    branches: [main]
+    paths: ['apk/**']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: إنشاء الإصدار
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VER=$(cat apk/version.txt | tr -d ' \n')
+          if gh release view "v$VER" >/dev/null 2>&1; then
+            gh release upload "v$VER" apk/anime-universe.apk --clobber
+          else
+            gh release create "v$VER" apk/anime-universe.apk --title "عالم الأنمي $VER" --notes-file apk/notes.md --latest
+          fi
